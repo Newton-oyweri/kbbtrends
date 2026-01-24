@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -10,184 +11,155 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   async function login() {
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    setLoading(true); setError(null);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return setError(error.message);
-
     navigate("/dashboard");
   }
 
   async function signup() {
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
+    setLoading(true); setError(null);
+    const { error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (error) return setError(error.message);
-
-    alert("Signup successful. Check your email for confirmation.");
+    alert("Signup successful. Check your email.");
   }
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center p-4 position-relative overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, #001233 0%, #0f1e3f 50%, #001233 100%)",
-        color: "#ffffff",
-      }}
-    >
-      {/* Subtle geometric overlay for colorful mosaic feel */}
-      <div className="position-absolute top-0 start-0 w-100 h-100 opacity-25 pointer-events-none">
-        <div
-          className="position-absolute rounded-circle"
-          style={{
-            width: "60%",
-            height: "60%",
-            top: "-20%",
-            left: "-20%",
-            background: "radial-gradient(circle at 30% 30%, #ff6b35, #00d4ff)",
-            filter: "blur(120px)",
-          }}
-        />
-        <div
-          className="position-absolute rounded-circle"
-          style={{
-            width: "70%",
-            height: "70%",
-            bottom: "-25%",
-            right: "-25%",
-            background: "radial-gradient(circle at 70% 70%, #40c4ff, #ff8c42)",
-            filter: "blur(140px)",
-          }}
-        />
-      </div>
+    <div style={styles.viewport}>
+      {/* MASSIVE BACKGROUND SHARDS */}
+      <div style={styles.bgOrange}></div>
+      <div style={styles.bgTeal}></div>
+      <div style={styles.bgNavyGlass}></div>
 
-      {/* Optional subtle savanna wave at bottom */}
-      <div
-        className="position-absolute bottom-0 start-0 end-0"
-        style={{
-          height: "180px",
-          opacity: 0.3,
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23001133' fill-opacity='1' d='M0,224L48,197.3C96,171,192,117,288,117.3C384,117,480,171,576,181.3C672,192,768,160,864,154.7C960,149,1056,171,1152,176C1248,181,1344,171,1392,165.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E\")",
-          backgroundSize: "cover",
-          backgroundPosition: "bottom",
-        }}
-      />
-
-      {/* Main Bootstrap Card */}
-      <div
-        className="card bg-dark bg-opacity-75 border border-info-subtle shadow-lg text-white"
-        style={{
-          maxWidth: "420px",
-          backdropFilter: "blur(12px)",
-          borderRadius: "1.25rem",
-          overflow: "hidden",
-        }}
-      >
-        <div className="card-body p-5">
-          <h2
-            className="text-center mb-5 fw-bold"
-            style={{
-              background: "linear-gradient(90deg, #ff8c42, #00d4ff, #40c4ff)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            eFootball
-          </h2>
-
-          <form>
-            <div className="mb-4">
-              <input
-                type="email"
-                className="form-control form-control-lg bg-dark text-white border-info-subtle"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-              />
+      <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "100vh", position: 'relative', zIndex: 10 }}>
+        <div className="card shadow-lg border-0 text-white" style={styles.authCard}>
+          <div className="card-body p-5 text-center">
+            
+            {/* Branding Section */}
+            <div className="mb-5">
+              <h1 className="display-4 fw-bold mb-0" style={{ letterSpacing: '2px', textTransform: 'capitalize' }}>efootball</h1>
+              <div className="d-flex align-items-center justify-content-center mt-2" style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                <span className="fw-bold me-2">
+                  Skyla <sup style={{ fontSize: "0.6em", verticalAlign: 'top', top: '-0.5em' }}>®</sup>
+                </span>
+                <div style={{ width: '1px', height: '14px', background: 'white', opacity: 0.5 }}></div>
+                <span className="ms-2 fw-light text-lowercase" style={{ letterSpacing: '1px' }}>smart ecosystem</span>
+              </div>
             </div>
 
+            {/* Inputs */}
+            <div className="mb-3">
+              <input
+                className="form-control form-control-lg bg-white bg-opacity-10 text-white border-secondary shadow-none"
+                placeholder="Email"
+                style={styles.inputField}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
             <div className="mb-4">
               <input
                 type="password"
-                className="form-control form-control-lg bg-dark text-white border-info-subtle"
+                className="form-control form-control-lg bg-white bg-opacity-10 text-white border-secondary shadow-none"
                 placeholder="Password"
+                style={styles.inputField}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
               />
             </div>
 
-            {error && (
-              <div className="alert alert-danger text-center mb-4" role="alert">
-                {error}
-              </div>
-            )}
+            {error && <div className="alert alert-danger py-2 small bg-danger bg-opacity-25 border-0 text-white">{error}</div>}
 
-            <div className="d-grid gap-3">
-              <button
-                type="button"
-                className="btn btn-lg fw-bold text-white"
-                onClick={login}
+            {/* Buttons */}
+            <div className="d-grid gap-2">
+              <button 
+                className="btn btn-lg fw-bold text-white border-0 shadow-sm" 
+                style={{ backgroundColor: '#00b5ad', borderRadius: '0' }} 
+                onClick={login} 
                 disabled={loading}
-                style={{
-                  background: "linear-gradient(90deg, #ff6b35, #ff8c42)",
-                  border: "none",
-                  boxShadow: "0 6px 20px rgba(255,107,53,0.35)",
-                }}
               >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                    Loading...
-                  </>
-                ) : (
-                  "Log In"
-                )}
+                {loading ? "Authenticating..." : "LOG IN"}
               </button>
-
-              <button
-                type="button"
-                className="btn btn-lg fw-bold text-white"
-                onClick={signup}
+              <button 
+                className="btn btn-link text-white text-decoration-none small opacity-50 mt-2" 
+                onClick={signup} 
                 disabled={loading}
-                style={{
-                  background: "linear-gradient(90deg, #00d4ff, #40c4ff)",
-                  border: "none",
-                  boxShadow: "0 6px 20px rgba(64,196,255,0.35)",
-                }}
               >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                    Loading...
-                  </>
-                ) : (
-                  "Sign Up"
-                )}
+                Don't have an account? Sign Up
               </button>
             </div>
-          </form>
-
-          <p className="text-center text-secondary mt-4 small">
-            Powered by Skyla® smart ecosystem
-          </p>
+          </div>
+          
+          <div style={styles.bottomBorder}></div>
         </div>
       </div>
     </div>
   );
 }
+
+const styles = {
+  viewport: {
+    backgroundColor: "#f8f9fa",
+    height: "100vh",
+    width: "100vw",
+    overflow: "hidden",
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  // Spreading the shards across the full screen
+  bgOrange: {
+    position: "absolute",
+    width: "120vw",
+    height: "120vh",
+    top: "-10%",
+    left: "-10%",
+    backgroundColor: "#f7931e",
+    clipPath: "polygon(20% 0%, 100% 0%, 70% 100%, 0% 80%)",
+    opacity: 0.8,
+    zIndex: 1,
+    transform: "rotate(-5deg)"
+  },
+  bgTeal: {
+    position: "absolute",
+    width: "110vw",
+    height: "110vh",
+    top: "-5%",
+    right: "-5%",
+    backgroundColor: "#00b5ad",
+    clipPath: "polygon(10% 10%, 90% 0%, 100% 90%, 20% 100%)",
+    mixBlendMode: "multiply", 
+    opacity: 0.7,
+    zIndex: 2,
+    transform: "rotate(2deg)"
+  },
+  bgNavyGlass: {
+    position: "absolute",
+    width: "100vw",
+    height: "100vh",
+    backgroundColor: "rgba(10, 26, 68, 0.4)", // A wash of the navy color
+    zIndex: 3,
+  },
+  authCard: {
+    width: "100%",
+    maxWidth: "450px",
+    backgroundColor: "rgba(10, 26, 68, 0.95)", // Slightly transparent to let shards peak through
+    borderRadius: "2px",
+    overflow: "hidden",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.1)"
+  },
+  inputField: {
+    border: "1px solid rgba(255,255,255,0.2)",
+    borderRadius: "0",
+    fontSize: "0.95rem"
+  },
+  bottomBorder: {
+    height: "6px",
+    width: "100%",
+    background: "linear-gradient(90deg, #f7931e 0%, #00b5ad 50%, #f7931e 100%)",
+  }
+};
