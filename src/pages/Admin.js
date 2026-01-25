@@ -77,7 +77,7 @@ function MatchManager() {
   }
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "16px", fontFamily: "sans-serif" }}>
+    <div className="mt-5" style={{ maxWidth: "800px", margin: "0 auto", padding: "16px", fontFamily: "sans-serif" }}>
       <Navbar />
       <ManagerPanel/>
       

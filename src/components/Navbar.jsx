@@ -1,51 +1,41 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 
 export default function Navbar() {
-  return (
-    <nav style={styles.nav}>
-      <div style={styles.brand}>
-    <button onClick={() => supabase.auth.signOut().then(() => window.location.href = "/")}>
-              Log out
-            </button>
-      </div>
+  const navigate = useNavigate();
 
-      <div style={styles.links}>
-        <Link to="/dashboard" style={styles.link}>Home</Link>
-        <Link to="/teams" style={styles.link}>Teams</Link>
-        <Link to="/admin" style={styles.link}>Admin</Link>
+  return (
+    <nav className="navbar fixed-top bg-black border-bottom border-primary p-2">
+      <div className="container-fluid d-flex flex-nowrap overflow-auto" style={{ scrollbarWidth: 'none' }}>
+        
+        {/* Brand */}
+        <Link className="navbar-brand text-primary fw-bold me-4" to="/dashboard">efootball</Link>
+
+        {/* Scrollable Links */}
+        <div className="d-flex flex-nowrap align-items-center">
+          <NavLink to="/dashboard" icon="bi-house" label="Home" />
+          <NavLink to="/teams" icon="bi-people" label="Teams" />
+          <NavLink to="/admin" icon="bi-shield-lock" label="Admin" />
+          <NavLink to="/account" icon="bi-person" label="Account" />
+          
+          <button 
+            className="btn btn-sm btn-link text-primary text-decoration-none fw-bold ms-3" 
+            onClick={() => supabase.auth.signOut().then(() => navigate("/"))}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <i className="bi bi-box-arrow-right me-1"></i> Logout
+          </button>
+        </div>
 
       </div>
     </nav>
   );
 }
 
-const styles = {
-  nav: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "60px",
-    background: "#0d6efd",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 20px",
-    zIndex: 1000,
-  },
-  brand: {
-    fontWeight: "bold",
-    fontSize: "18px",
-  },
-  links: {
-    display: "flex",
-    gap: "15px",
-  },
-  link: {
-    color: "#fff",
-    textDecoration: "none",
-    fontWeight: "500",
-  },
-};
+function NavLink({ to, icon, label }) {
+  return (
+    <Link to={to} className="nav-link text-white px-3 d-flex align-items-center" style={{ whiteSpace: 'nowrap' }}>
+      <i className={`bi ${icon} text-primary me-2`}></i> {label}
+    </Link>
+  );
+}

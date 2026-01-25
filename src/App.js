@@ -4,6 +4,7 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard.tsx";
 import Teams from "./pages/Team.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Account from "./pages/Account";  
 
 function App() {
   return (
@@ -29,11 +30,19 @@ function App() {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole={"admin" }>
             <Admin />
           </ProtectedRoute>
         }
-      />   
+      />    
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <Account />
+          </ProtectedRoute>
+        }
+      />
        </Routes>
       );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase"; // adjust path
-import Navbar from "../components/Navbar"; // adjust path
+import { supabase } from "../supabase";
+import Navbar from "../components/Navbar";
 
 interface Team {
   id: string;
@@ -15,86 +15,87 @@ interface Team {
 }
 
 export default function Teams() {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [groups, setGroups] = useState<{ [key: string]: Team[] }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Added 'teamsranked' back to the list
+  const allTables = ["teamsranked", "teamgroup1", "teamgroup2", "teamgroup3", "teamgroup4"];
+
   useEffect(() => {
-    const fetchTeams = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("teamsranked")
-          .select("*")
-          .order("name", { ascending: true });
+        const fetchedData: { [key: string]: Team[] } = {};
 
-        if (error) throw error;
-        setTeams(data || []);
+        await Promise.all(
+          allTables.map(async (table) => {
+            const { data, error } = await supabase
+              .from(table)
+              .select("*")
+              .order("points", { ascending: false });
+
+            if (error) throw error;
+            fetchedData[table] = data || [];
+          })
+        );
+
+        setGroups(fetchedData);
       } catch (err: any) {
-        console.error(err);
-        setError("Failed to load league standings.");
+        setError("Failed to load standings.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeams();
+    fetchAllData();
   }, []);
 
   return (
-    <main className="mt-5">
+    <main className="mt-5 bg-black text-white min-vh-100">
       <Navbar />
 
       <div className="container py-5">
-        <div className="mb-4">
-          <h1 className="h3 fw-bold">League Standings</h1>
-          <p className="text-muted">E-Football Season 2026</p>
-        </div>
+        <h1 className="h3 fw-bold text-primary mb-4">League Standings</h1>
 
         {loading ? (
-          <div className="text-center my-5">
-            <div className="spinner-border text-primary mb-3" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading teams...</p>
-          </div>
+          <div className="text-center my-5"><div className="spinner-border text-primary"></div></div>
         ) : error ? (
-          <div className="alert alert-danger text-center my-5">{error}</div>
+          <div className="alert alert-danger">{error}</div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-striped table-hover table-bordered align-middle">
-              <thead className="table-dark">
-                <tr>
-                  <th scope="col">Team Name</th>
-                  <th scope="col" className="text-center">W</th>
-                  <th scope="col" className="text-center">D</th>
-                  <th scope="col" className="text-center">L</th>
-                  <th scope="col" className="text-center">PTS</th>
-                  <th scope="col" className="text-center">GD</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-4 text-muted">
-                      No teams found.
-                    </td>
-                  </tr>
-                ) : (
-                  teams.map((team) => (
-                    <tr key={team.id}>
-                      <td className="fw-medium">{team.name}</td>
-                      <td className="text-center">{team.w}</td>
-                      <td className="text-center">{team.d}</td>
-                      <td className="text-center">{team.l}</td>
-                      <td className="text-center fw-bold">{team.points}</td>
-                      <td className="text-center">{team.gd}</td>
+          allTables.map((table) => (
+            <div key={table} className="mb-5">
+              <h2 className="h5 fw-bold text-uppercase border-start border-primary border-4 ps-2 mb-3">
+                {table === "teamsranked" ? "Overall Standings" : `Group ${table.slice(-1)}`}
+              </h2>
+              <div className="table-responsive">
+                <table className="table table-dark table-bordered align-middle">
+                  <thead className="table-primary text-black">
+                    <tr>
+                      <th>Team Name</th>
+                      <th className="text-center">W</th>
+                      <th className="text-center">D</th>
+                      <th className="text-center">L</th>
+                      <th className="text-center">PTS</th>
+                      <th className="text-center">GD</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {groups[table]?.map((team) => (
+                      <tr key={team.id}>
+                        <td>{team.name}</td>
+                        <td className="text-center">{team.w}</td>
+                        <td className="text-center">{team.d}</td>
+                        <td className="text-center">{team.l}</td>
+                        <td className="text-center fw-bold text-primary">{team.points}</td>
+                        <td className="text-center">{team.gd}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </main>

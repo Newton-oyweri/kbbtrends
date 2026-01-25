@@ -1,42 +1,67 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, requiredRole = null }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
-    // Check session on mount
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        navigate("/"); // redirect to auth page
-      } else {
-        setUser(data.session.user);
+    let mounted = true;
+
+    const getSessionAndRole = async () => {
+      // 1. Get Session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        if (mounted) navigate("/", { replace: true });
+        return;
+      }
+
+      // 2. Get Role (Optional enhancement)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (mounted) {
+        setUser(session.user);
+        setRole(profile?.role || "member");
         setLoading(false);
       }
     };
 
-    checkUser();
+    getSessionAndRole();
 
-    // Listen for auth changes (logout in another tab)
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session) navigate("/");
-        else setUser(session.user);
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        navigate("/", { replace: true });
       }
-    );
+    });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (loading) {
-    return <p style={{ padding: 40 }}>Checking authentication...</p>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '100px' }}>
+        <p>Verifying access...</p>
+      </div>
+    );
   }
 
-  // Pass the user as a prop to the child
-  return React.cloneElement(children, { user });
+  // If a specific role is required (e.g., 'admin')
+  if (requiredRole && role !== requiredRole) {
+    return <p style={{ padding: 40 }}>Access Denied: You do not have permissions.</p>;
+  }
+
+  // Render children and inject user/role context
+  return React.cloneElement(children, { user, role });
 }
