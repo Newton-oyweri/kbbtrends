@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../supabase";
 import Navbar from "../components/Navbar";
-import Matches from "./Matches";  
+import Matches from "./Matches"; 
+import { Link } from "react-router-dom";
+
 
 function Home() {
   const [user, setUser] = useState(null);
@@ -152,8 +154,6 @@ function Home() {
     <>
       <Navbar />
       <div className="mt-5" style={{ padding: "20px", fontFamily: "sans-serif" }}>
-        <h1>e football</h1>
-        <hr />
         <Matches />
 
 
@@ -244,33 +244,59 @@ function Home() {
         )}
 
         {/* Display Comments */}
-        <div className="comments-list">
-          <h3>Community Feed</h3>
-          {comments.length === 0 && <p>No comments yet. Be the first!</p>}
-          {comments.map((c) => (
-            <div
-              key={c.id}
-              style={{
-                borderBottom: "1px solid #eee",
-                padding: "12px 0",
-                lineHeight: "1.5",
-              }}
-            >
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <strong>{c.profiles?.display_name || "Unknown User"}</strong>
-                <span style={{ color: "#666", fontSize: "0.9rem" }}>
-                  @{c.profiles?.username || "user"}
-                </span>
-                <span style={{ color: "#aaa", fontSize: "0.8rem" }}>
-                  • {new Date(c.created_at).toLocaleString()}
-                </span>
+
+
+<div className="comments-list mt-4">
+  <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <h3 className="h5 fw-bold mb-0 text-dark">Community Feed</h3>
+    <span className="badge bg-primary rounded-pill">{comments.length} Comments</span>
+  </div>
+
+  {comments.length === 0 && (
+    <div className="text-center py-5 bg-light rounded-3 border border-dashed">
+      <p className="text-muted mb-0">No comments yet. Be the first to join the conversation!</p>
+    </div>
+  )}
+
+  <div className="d-flex flex-column gap-3">
+    {comments.map((c) => (
+      <div key={c.id} className="card border-0 shadow-sm">
+        <div className="card-body p-3">
+          <div className="d-flex align-items-center gap-2 mb-2">
+            
+            {/* Wrap Avatar in Link */}
+            <Link to={`/profile/${c.profiles?.username}`} className="text-decoration-none">
+              <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: "32px", height: "32px", fontSize: "0.8rem" }}>
+                {(c.profiles?.display_name || "U")[0].toUpperCase()}
               </div>
-              <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>
-                {c.content}
-              </p>
+            </Link>
+            
+            <div className="d-flex flex-column">
+              {/* Wrap Name in Link */}
+              <Link 
+                to={`/profile/${c.profiles?.username}`} 
+                className="fw-bold text-dark lh-1 text-decoration-none"
+                style={{ cursor: "pointer" }}
+                onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+                onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
+              >
+                {c.profiles?.display_name || "Unknown User"}
+              </Link>
+              
+              <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
+                @{c.profiles?.username || "user"} • {new Date(c.created_at).toLocaleDateString()}
+              </span>
             </div>
-          ))}
+          </div>
+
+          <p className="card-text text-secondary mt-2 ps-1" style={{ whiteSpace: "pre-wrap", fontSize: "0.95rem", lineHeight: "1.5" }}>
+            {c.content}
+          </p>
         </div>
+      </div>
+    ))}
+  </div>
+</div>
       </div>
     </>
   );

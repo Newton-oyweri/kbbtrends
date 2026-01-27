@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Teams from "./pages/Team.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Account from "./pages/Account";  
+import ProfileView from "./pages/ProfileView.tsx";
 
 function App() {
   return (
@@ -43,7 +44,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile/:username"
+        element={
+          <ProtectedRoute>
+            <ProfileView />
+          </ProtectedRoute>
+        }
+      />
        </Routes>
+
       );
 }
 
