@@ -9,6 +9,7 @@ function MatchScheduler() {
   const [homeTeamId, setHomeTeamId] = useState("");
   const [awayTeamId, setAwayTeamId] = useState("");
   const [stage, setStage] = useState("GROUP");
+  const [stagegroup, setStagegroup] = useState("");
 
   // Update Result State
   const [selectedMatchId, setSelectedMatchId] = useState("");
@@ -28,7 +29,8 @@ function MatchScheduler() {
         home_team:home_team_id(name), 
         away_team:away_team_id(name), 
         played, 
-        stage
+        stage,
+        group_id
       `)
       .order("id", { ascending: false });
 
@@ -45,7 +47,8 @@ function MatchScheduler() {
       home_team_id: homeTeamId,
       away_team_id: awayTeamId,
       stage: stage,
-      played: false
+      played: false,
+      group_id: stagegroup || null
     });
 
     if (error) alert(error.message);
@@ -74,6 +77,7 @@ function MatchScheduler() {
       setHomeGoals(0);
       setAwayGoals(0);
       fetchData();
+
     }
   };
 
@@ -84,7 +88,7 @@ function MatchScheduler() {
       <section>
         <h3>🗓️ Schedule New Match</h3>
         <div style={{ display: "grid", gap: "10px" }}>
-                <select value={stage} onChange={(e) => setStage(e.target.value)}>
+        <select value={stage} onChange={(e) => setStage(e.target.value)}>
           <option value="">All Stages</option>
           <option value="GROUP">Group Stage</option>
           <option value="QUARTER">Quarter Finals</option>
@@ -92,6 +96,17 @@ function MatchScheduler() {
           <option value="FINAL">Final</option>
           <option value="THIRD_PLACE">Third Place Playoff</option>
         </select>
+
+         <select value={stagegroup} onChange={(e) => setStagegroup(e.target.value)}>
+          <option value="">Select Stage Group</option>
+          <option value="1">Group 1</option>
+          <option value="2">Group 2 </option> 
+          <option value="3">Group 3</option>
+          <option value="4">Group 4</option>
+          </select>
+
+         
+         
 
           <div style={{ display: "flex", gap: "10px" }}>
             <select style={{ flex: 1 }} value={homeTeamId} onChange={(e) => setHomeTeamId(e.target.value)}>
