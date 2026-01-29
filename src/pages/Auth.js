@@ -1,23 +1,29 @@
-import { useState } from "react";
+import { useState } from "react"; // Removed useEffect from here
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Signup
+  const [authMode, setAuthMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
 
-  // Unified Handler
+  const switchMode = (mode) => {
+    setAuthMode(mode);
+    setError(null);
+    setMessage(null);
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    if (isLogin) {
+    if (authMode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setError(error.message);
@@ -25,22 +31,37 @@ export default function Auth() {
       } else {
         navigate("/dashboard");
       }
-    } else {
+    } else if (authMode === "signup") {
       const { error, data } = await supabase.auth.signUp({ email, password });
       setLoading(false);
       if (error) {
-        setError(error.message);
+        // Specific check for existing emails
+        if (error.message.includes("User already registered")) {
+          setError("Account already exists. Try logging in!");
+        } else {
+          setError(error.message);
+        }
       } else if (data.user && data.session === null) {
-        // Supabase requires email verification by default
         setIsSignedUp(true);
       } else {
         navigate("/dashboard");
+      }
+    } else if (authMode === "reset") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      setLoading(false);
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage("Password reset link sent to your email!");
       }
     }
   }
 
   return (
     <div style={styles.viewport}>
+      {/* Background graphics... */}
       <div style={styles.bgOrange}></div>
       <div style={styles.bgTeal}></div>
       <div style={styles.bgNavy}></div>
@@ -49,7 +70,6 @@ export default function Auth() {
         <div className="card shadow-lg border-0 text-white" style={styles.authCard}>
           <div className="card-body p-5 text-center">
             
-            {/* Branding */}
             <div className="mb-5">
               <h1 className="display-5 fw-bold mb-0">efootball</h1>
               <div className="d-flex align-items-center justify-content-center mt-1" style={{ fontSize: '0.85rem', opacity: 0.9 }}>
@@ -68,7 +88,9 @@ export default function Auth() {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <h3 className="h5 mb-4 opacity-75">{isLogin ? "Welcome Back" : "Create Account"}</h3>
+                <h3 className="h5 mb-4 opacity-75">
+                  {authMode === "login" ? "Welcome Back" : authMode === "signup" ? "Create Account" : "Reset Password"}
+                </h3>
                 
                 <div className="mb-3">
                   <input
@@ -82,19 +104,22 @@ export default function Auth() {
                   />
                 </div>
                 
-                <div className="mb-4">
-                  <input
-                    type="password"
-                    required
-                    className="form-control form-control-lg bg-white bg-opacity-10 text-white border-secondary shadow-none"
-                    placeholder="Password"
-                    style={styles.inputField}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
+                {authMode !== "reset" && (
+                  <div className="mb-4">
+                    <input
+                      type="password"
+                      required
+                      className="form-control form-control-lg bg-white bg-opacity-10 text-white border-secondary shadow-none"
+                      placeholder="Password"
+                      style={styles.inputField}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {error && <div className="alert alert-danger py-2 small bg-danger bg-opacity-25 border-0 text-white mb-4">{error}</div>}
+                {message && <div className="alert alert-success py-2 small bg-success bg-opacity-25 border-0 text-white mb-4">{message}</div>}
 
                 <div className="d-grid gap-3">
                   <button 
@@ -106,17 +131,24 @@ export default function Auth() {
                     {loading ? (
                       <span className="spinner-border spinner-border-sm me-2"></span>
                     ) : (
-                      isLogin ? "LOG IN" : "SIGN UP"
+                      authMode === "login" ? "LOG IN" : authMode === "signup" ? "SIGN UP" : "SEND RESET LINK"
                     )}
                   </button>
                   
-                  <button 
-                    type="button"
-                    className="btn btn-link text-white text-decoration-none small opacity-75" 
-                    onClick={() => { setIsLogin(!isLogin); setError(null); }}
-                  >
-                    {isLogin ? "New here ? Create account" : "Already have an account? Log in"}
-                  </button>
+                  <div className="d-flex flex-column gap-2 mt-2">
+                    {authMode === "login" && (
+                      <button type="button" style={styles.linkBtn} onClick={() => switchMode("reset")}>
+                        Forgot Password?
+                      </button>
+                    )}
+                    <button 
+                      type="button"
+                      style={styles.linkBtn}
+                      onClick={() => switchMode(authMode === "login" ? "signup" : "login")}
+                    >
+                      {authMode === "login" ? "New here? Create account" : "Already have an account? Log in"}
+                    </button>
+                  </div>
                 </div>
               </form>
             )}
@@ -127,6 +159,8 @@ export default function Auth() {
     </div>
   );
 }
+
+// styles remain the same...
 
 const styles = {
   viewport: {
@@ -178,7 +212,17 @@ const styles = {
   inputField: {
     border: "1px solid rgba(255,255,255,0.2)",
     borderRadius: "0",
-    fontSize: "0.9rem"
+    fontSize: "0.9rem",
+    color: "white"
+  },
+  linkBtn: {
+    background: "none",
+    border: "none",
+    color: "white",
+    fontSize: "0.85rem",
+    opacity: 0.75,
+    cursor: "pointer",
+    textDecoration: "none"
   },
   bottomBorder: {
     height: "6px",
