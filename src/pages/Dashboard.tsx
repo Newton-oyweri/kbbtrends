@@ -15,7 +15,7 @@ function Home() {
   return (
     <>
       <Navbar />
-      <div className="mt-5 pt-3 container-fluid" style={{ maxWidth: "100%" }}>
+      <div className="mt-5 pt-3 container-fluid" >
         
         {/* Simplified Tabs */}
         <ul className="nav nav-pills nav-fill mb-4 p-1 bg-light rounded shadow-sm">
