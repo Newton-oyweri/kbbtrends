@@ -29,7 +29,7 @@ export default function Auth() {
         setError(error.message);
         setLoading(false);
       } else {
-        navigate("/dashboard");
+        navigate("/home");
       }
     } else if (authMode === "signup") {
       const { error, data } = await supabase.auth.signUp({ email, password });
@@ -44,7 +44,7 @@ export default function Auth() {
       } else if (data.user && data.session === null) {
         setIsSignedUp(true);
       } else {
-        navigate("/dashboard");
+        navigate("/home");
       }
     } else if (authMode === "reset") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -71,7 +71,7 @@ export default function Auth() {
           <div className="card-body p-5 text-center">
             
             <div className="mb-5">
-              <h1 className="display-5 fw-bold mb-0">efootball</h1>
+              <h1 className="display-5 fw-bold mb-0">KBB trends</h1>
               <div className="d-flex align-items-center justify-content-center mt-1" style={{ fontSize: '0.85rem', opacity: 0.9 }}>
                 <span className="fw-bold me-2">Skyla <sup style={{ fontSize: "1em" }}>®</sup></span>
                 <div style={{ width: '1px', height: '14px', background: 'white', opacity: 0.5 }}></div>

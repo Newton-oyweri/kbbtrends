@@ -1,12 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
-import Dashboard from "./pages/Dashboard.tsx";
-import Teams from "./pages/Team.tsx";
+import Home from "./pages/Home.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Account from "./pages/Account";  
-import ProfileView from "./pages/ProfileView.tsx";
-import MatchVote from "./pages/MatchVote.tsx";   
 import UpdatePassword from "./pages/UpdatePassword.js";
 
 function App() {
@@ -20,54 +15,13 @@ function App() {
       <Route path="/update-password" element={<UpdatePassword />} />
 
       <Route
-        path="/dashboard"
+        path="/home"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Home />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/teams"
-        element={
-          <ProtectedRoute>
-            <Teams />
-          </ProtectedRoute>
-        }
-      />  
-
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole={"admin"}>
-            <Admin />
-          </ProtectedRoute>
-        }
-      />    
-      <Route
-        path="/account"
-        element={
-          <ProtectedRoute>
-            <Account />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/:username"
-        element={
-          <ProtectedRoute>
-            <ProfileView />
-          </ProtectedRoute>
-        }
-      />
-      <Route  
-        path="/match/:id/vote"
-        element={
-          <ProtectedRoute>
-            <MatchVote />
-          </ProtectedRoute>
-        }
-      />  
     </Routes>
   );
 }

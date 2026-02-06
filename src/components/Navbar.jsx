@@ -1,109 +1,156 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../supabase";
+// components/Navbar.tsx  (or Sidebar.tsx)
+import { useState } from 'react';
+import {
+  FaHome,
+  FaSquare,
+  FaThLarge,
+  FaBars,
+  FaSearch,
+  FaBullhorn,
+  FaExpandArrowsAlt,
+} from 'react-icons/fa';
 
 export default function Navbar() {
-  const navigate = useNavigate();
-  const location = useLocation(); // Detects current route for active highlighting
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsExpanded((prev) => !prev);
+  };
 
   return (
-    <nav className="navbar fixed-top bg-black border-bottom border-primary shadow-lg" style={{ borderBottomWidth: '3px' }}>
-      <div className="container-fluid px-3 px-md-4">
-        <div className="d-flex align-items-center w-100">
-          {/* Brand - gradient text matching theme */}
-          <Link 
-            className="navbar-brand fw-bold fs-4 me-4 me-md-5 text-decoration-none" 
-            to="/dashboard"
-            style={{
-              background: 'linear-gradient(90deg, #0d6efd, #20c997, #fd7e14)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}
-          >
-            efootball
-          </Link>
-
-          {/* Scrollable navigation links */}
-          <div 
-            className="d-flex flex-nowrap align-items-center overflow-auto flex-grow-1"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            {/* Hide scrollbar in WebKit browsers */}
-            <style>{`
-              .overflow-auto::-webkit-scrollbar { display: none; }
-            `}</style>
-
-            <NavLink to="/dashboard" icon="bi-house-door-fill" label="Home" currentPath={location.pathname} />
-            <NavLink to="/teams" icon="bi-people-fill" label="Teams" currentPath={location.pathname} />
-            <NavLink to="/admin" icon="bi-shield-lock-fill" label="Admin" currentPath={location.pathname} />
-            <NavLink to="/account" icon="bi-person-fill" label="Account" currentPath={location.pathname} />
-
-            {/* Logout button */}
-            <button
-              className="btn btn-sm btn-outline-primary rounded-pill fw-bold ms-3 px-3 py-1 d-flex align-items-center"
-              onClick={() => supabase.auth.signOut().then(() => navigate("/"))}
-              style={{
-                borderColor: '#fd7e14',
-                color: '#fd7e14',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <i className="bi bi-box-arrow-right me-2"></i>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-function NavLink({ to, icon, label, currentPath }) {
-  // Highlight if exact match or if it's a sub-route (e.g. /teams/something highlights "Teams")
-  const isActive = currentPath === to || (to !== "/dashboard" && currentPath.startsWith(to + "/")) || (to !== "/dashboard" && currentPath === to);
-
-  return (
-    <Link
-      to={to}
-      className={`nav-link d-flex align-items-center px-3 py-2 mx-1 rounded-pill text-nowrap transition-all ${
-        isActive 
-          ? 'bg-gradient-active text-white shadow-sm' 
-          : 'text-white-50'
-      }`}
-      style={{
-        fontWeight: isActive ? '600' : '500',
-        minWidth: 'fit-content',
-      }}
+    <aside
+      data-expanded={isExpanded}
+      className={`h-100 bg-white border-r border-blue-500 shadow-lg flex flex-col transition-all duration-300 z-20
+        ${isExpanded ? 'w-fit' : 'w-fit'}`}
     >
-      <i 
-        className={`bi ${icon} me-2 fs-5 ${isActive ? 'text-warning' : 'text-primary'}`}
-        style={{ color: isActive ? '#fd7e14' : '#0d6efd' }}
-      ></i>
-      {label}
-    </Link>
+      {/* Top Toggle / Logo Area – smaller height */}
+      <div
+        className=" border-t border-blue-500 h-16 flex items-center justify-center border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={toggleSidebar}
+      >
+        {isExpanded ? (
+          <div className="flex border-t border-blue-500 items-center gap-3 mt-2 px-4 w-full">
+            <FaBars className="text-xl text-gray-700 flex-shrink-0" />
+            <span className="font-bold text-lg text-gray-900 truncate">
+              Kbb trends
+            </span>
+          </div>
+        ) : (
+          <FaBars className="text-xl text-gray-700" />
+        )}
+      </div>
+
+      {/* Navigation Items – tighter spacing, smaller icons, no scroll */}
+      <nav className="flex-1 py-5 flex flex-col border-t border-blue-500 items-center">
+        <ul className="space-y-4 border-t border-blue-500 w-full px-1">
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0">
+                <FaHome className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">All Types</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <FaSquare className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Static</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg bg-pink-50 text-pink-700 font-medium w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center flex-shrink-0">
+                <FaThLarge className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Mega Menu</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg text-gray-600 hover:bg-yellow-50 hover:text-yellow-700 transition w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center flex-shrink-0">
+                <FaBars className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Side Bar</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg text-gray-600 hover:bg-cyan-50 hover:text-cyan-700 transition w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center flex-shrink-0">
+                <FaSearch className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Search Bar</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <FaBullhorn className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Announcement</span>}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              className={`flex items-center ${
+                isExpanded ? 'justify-start px-3' : 'justify-center'
+              } gap-3 py-2.5 rounded-lg bg-blue-50 text-blue-700 font-medium w-full`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <FaExpandArrowsAlt className="text-lg" />
+              </div>
+              {isExpanded && <span className="font-medium text-sm">Full Screen</span>}
+            </a>
+          </li>
+
+          {/* If you add more items later, consider making collapse mandatory on mobile or adding scroll only then */}
+        </ul>
+      </nav>
+
+      {/* Footer – only visible when expanded */}
+      {isExpanded && (
+        <div>
+            <p className="text-xs text-blue-500 mt-2">Skyla &reg; : smart ecosystem</p>
+        </div>
+      )}
+    </aside>
   );
 }
-
-// Add these styles to your component (or global CSS)
-const navStyles = `
-  .bg-gradient-active {
-    background: linear-gradient(135deg, rgba(13, 110, 253, 0.35), rgba(32, 201, 151, 0.25), rgba(253, 126, 20, 0.25)) !important;
-    border: 1px solid rgba(13, 110, 253, 0.6);
-    box-shadow: 0 0 12px rgba(13, 110, 253, 0.45);
-  }
-  .nav-link {
-    transition: all 0.25s ease;
-  }
-  .nav-link:hover:not(.bg-gradient-active) {
-    background: rgba(13, 110, 253, 0.15);
-    color: #0d6efd !important;
-  }
-`;
-
-// In your component return, add:
-<style>{navStyles}</style>
