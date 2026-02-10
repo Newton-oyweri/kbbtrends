@@ -1,9 +1,15 @@
+/* Import a clean, modern font like Plus Jakarta Sans */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Pacifico&display=swap');
+
 html, body {
   margin: 0;
-  font-family: 'Pacifico', cursive;
+  /* Use Plus Jakarta Sans for the whole app */
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 * {
-  font-family: 'Pacifico', cursive;
+  /* This ensures everything inherits the clean font */
+  font-family: inherit;
 }

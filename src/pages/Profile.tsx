@@ -14,13 +14,6 @@ export default function Profile() {
 
       <main
         className="flex-1 overflow-y-auto transition-all duration-700 relative"
-        style={{
-          border: `3px solid ${theme.primary}`,
-          boxShadow: `inset 0 0 40px ${theme.glow}, 0 0 20px ${theme.glow}`,
-          margin: '8px',
-          borderRadius: '24px',
-          overflow: 'hidden'
-        }}
       >
         <div className="p-6 md:p-8 lg:p-10">
           <h1           className="text-3xl font-bold mb-6" style={{ color: theme.text }}>

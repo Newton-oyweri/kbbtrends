@@ -18,15 +18,7 @@ export default function Dashboard() {
       <main
         className="flex-1 overflow-y-auto transition-all duration-700 relative"
       >
-        <div className="p-6 md:p-8 lg:p-10">
-          <h1 className="text-3xl font-bold mb-6" style={{ color: theme.text }}>
-            Dashboard
-          </h1>
-
-          <p className="text-lg mb-8 opacity-75" style={{ color: theme.text }}>
-            Welcome! Experience the all-round theme glow.
-          </p>
-
+        <div >
           {/* Feed */}
           {Array.from({ length: 30 }).map((_, i) => (
             <div key={i} className="mb-4">
