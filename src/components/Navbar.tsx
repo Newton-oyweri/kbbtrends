@@ -23,15 +23,18 @@ export default function Navbar() {
         backgroundColor: theme.cardBg,
         border: `2px solid ${theme.primary}40`,
         boxShadow: `0 0 40px ${theme.glow}30`,
-        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth "snappy" transition
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        // Force the height and prevent any jumping
+        height: 'calc(100vh - 20px)', 
+        maxHeight: 'calc(100vh - 20px)',
       }}
-      className={`h-[calc(100vh-20px)] m-[10px] flex flex-col rounded-[24px] overflow-hidden ${
+      className={`m-[10px] flex flex-col rounded-[24px] overflow-hidden sticky top-[10px] shrink-0 ${
         isExpanded ? 'w-64' : 'w-20'
       }`}
     >
       {/* HEADER / TOGGLE */}
       <div 
-        className="h-20 flex items-center px-6 cursor-pointer hover:opacity-80 transition-opacity" 
+        className="h-20 flex items-center px-6 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <FaBars style={{ color: theme.primary }} className="text-xl flex-shrink-0" />
@@ -45,8 +48,8 @@ export default function Navbar() {
         </span>
       </div>
 
-      {/* NAV LINKS */}
-      <nav className="flex-1 px-3 space-y-2">
+      {/* NAV LINKS - overflow-y-auto ensures if you add 20 links, they scroll INSIDE the nav, not push it down */}
+      <nav className="flex-1 px-3 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {navLinks.map((link, index) => (
           <Link
             key={index}
@@ -57,7 +60,7 @@ export default function Navbar() {
             style={{ color: theme.text, textDecoration: 'none' }}
           >
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110 flex-shrink-0"
               style={{ backgroundColor: `${theme.primary}15`, color: theme.primary }}
             >
               {link.icon}
@@ -72,14 +75,14 @@ export default function Navbar() {
       </nav>
 
       {/* FOOTER ACTIONS */}
-      <div className="p-3 space-y-2 border-t" style={{ borderColor: `${theme.primary}20` }}>
+      <div className="p-3 space-y-2 border-t flex-shrink-0" style={{ borderColor: `${theme.primary}20` }}>
         {/* LOGOUT */}
         <button
           onClick={handleLogout}
           style={{ color: theme.text, border: `1px solid ${theme.primary}20` }}
           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl hover:bg-red-500/10 transition-colors"
         >
-          <FaSignOutAlt style={{ color: theme.primary }} />
+          <FaSignOutAlt style={{ color: theme.primary }} className="flex-shrink-0" />
           {isExpanded && <span className="text-[10px] font-black uppercase tracking-widest">Logout</span>}
         </button>
 
@@ -93,7 +96,7 @@ export default function Navbar() {
           }}
           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl transition-transform active:scale-95 font-bold"
         >
-          <FaMagic />
+          <FaMagic className="flex-shrink-0" />
           {isExpanded && <span className="text-[10px] font-black uppercase tracking-widest">Chaos Mode</span>}
         </button>
       </div>
