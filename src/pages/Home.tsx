@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar.tsx';
 import { useTheme } from './ThemeContext.tsx';
 import { supabase } from '../supabase';
 
@@ -61,12 +60,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.bg }}>
-        <Navbar />
+   
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.text }}>
           Loading posts...
         </div>
-      </div>
+   
     );
   }
 
@@ -79,13 +77,6 @@ export default function Dashboard() {
         color: theme.text,
       }}
     >
-      {/* Left sidebar - fixed/sticky */}
-      <div
-     
-      >
-        <Navbar />  {/* vertical */}
-      </div>
-
       {/* Main content area - scrolls */}
       <main
         style={{
