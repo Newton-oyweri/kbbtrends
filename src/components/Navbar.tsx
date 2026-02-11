@@ -13,8 +13,13 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { path: '/home', label: 'Vybz stream', icon: <i className="bi bi-broadcast"></i> },
-    { path: '/profile', label: 'My space', icon: <i className="bi bi-person-workspace"></i> },
+{ path: '/home', label: 'Vybz Stream', icon: <i className="bi bi-people-fill"></i> },
+
+{ path: '/profile', label: 'My Space', icon: <i className="bi bi-person-circle"></i> },
+
+{ path: '/chats', label: 'Messages', icon: <i className="bi bi-chat-dots-fill"></i> },
+
+ 
   ];
 
   return (

@@ -2,11 +2,13 @@ import { Routes, Route } from "react-router-dom";
 // Remove BrowserRouter from here if it's already in main.tsx/index.tsx
 import Auth from "./pages/Auth";
 import Home from "./pages/Home.tsx";
+import Chat from "./pages/Chat.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profileview from "./pages/Profileview.tsx";
 import UpdatePassword from "./pages/UpdatePassword.js";
 import { ThemeProvider } from './pages/ThemeContext.tsx';
 import Profile from "./pages/Profile.tsx";
+       import Chats from "./pages/Chats.tsx";
 
 function App() {
   return (
@@ -17,6 +19,17 @@ function App() {
         
         {/* Public Route */}
         <Route path="/update-password" element={<UpdatePassword />} />
+ 
+
+
+<Route 
+  path="/chats" 
+  element={
+    <ProtectedRoute>
+      <Chats />
+    </ProtectedRoute>
+  } 
+/>
 
         {/* Protected Routes - No extra Browsers needed here! */}
         <Route
@@ -44,9 +57,12 @@ function App() {
             </ProtectedRoute>
           }
         />
+            <Route path="/profileview/:userId" element={<ProtectedRoute><Profileview /></ProtectedRoute>} />
+       <Route path="/chat/:receiverId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
       </Routes>
     </ThemeProvider>
   );
 }
 
 export default App;
+
