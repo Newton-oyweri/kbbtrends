@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from './ThemeContext.tsx';
 import { supabase } from '../supabase';
+import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 
 type Post = {
   id: string;
@@ -47,49 +48,27 @@ export default function Dashboard() {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      ...(date.getFullYear() !== now.getFullYear() && { year: 'numeric' }),
-    });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   if (loading) {
     return (
-   
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.text }}>
-          Loading posts...
-        </div>
-   
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: theme.bg, color: theme.text }}>
+        <div className="spinner-border text-primary" role="status"></div>
+      </div>
     );
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        backgroundColor: theme.bg,
-        color: theme.text,
-      }}
-    >
-      {/* Main content area - scrolls */}
-      <main
-        style={{
-    
-          flex: 1,
-          padding: '24px 32px',
-          width: '100%',
-          minHeight: '100vh',
-        }}
-      >
+    <div style={{ minHeight: '100vh', backgroundColor: theme.bg, color: theme.text }}>
+      <main style={{ width: '100%', padding: '10px' }}>
+        
         {posts.length === 0 ? (
-          <div className="w-100" style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.7 }}>
-            No posts yet. Be the first to share something!
+          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.7 }}>
+            No posts yet.
           </div>
         ) : (
           posts.map((post) => (
@@ -98,94 +77,86 @@ export default function Dashboard() {
               style={{
                 backgroundColor: theme.card || '#1e1e1e',
                 borderRadius: '12px',
-                marginBottom: '24px',
-                padding: '20px',
+                marginBottom: '10px',
                 border: `1px solid ${theme.border || '#333'}`,
+                width: '100%', // Full screen width
               }}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    backgroundColor: theme.primary,
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '1.1rem',
-                    marginRight: '14px',
-                    flexShrink: 0,
-                  }}
-                >
-                  {(post.profiles?.display_name?.[0] || '?').toUpperCase()}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div style={{
+                      width: '45px', height: '45px', borderRadius: '50%',
+                      backgroundColor: theme.primary, color: 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 'bold', marginRight: '12px',
+                    }}>
+                    {(post.profiles?.display_name?.[0] || '?').toUpperCase()}
+                  </div>
+                  <div>
+                    <Link to={`/profileview/${post.user_id}`} style={{ color: theme.text, textDecoration: 'none', fontWeight: 700 }}>
+                      {post.profiles?.display_name || 'User'}
+                    </Link>
+                    <div style={{ opacity: 0.5, fontSize: '0.8rem' }}>{formatDate(post.created_at)}</div>
+                  </div>
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <Link
-                    to={`/profileview/${post.user_id}`}
-                    style={{
-                      color: theme.text,
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                      fontSize: '1.05rem',
-                      display: 'block',
-                    }}
-                  >
-                    {post.profiles?.display_name || 'User'}
-                  </Link>
-                  <small style={{ opacity: 0.65, fontSize: '0.875rem' }}>
-                    {formatDate(post.created_at)}
-                  </small>
-                </div>
+                <MoreHorizontal size={20} style={{ opacity: 0.6 }} />
               </div>
 
               {/* Content text */}
               {post.content && (
-                <p
-                  style={{
-                    margin: '0 0 16px 0',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    lineHeight: 1.6,
-                    fontSize: '1.05rem',
-                  }}
-                >
+                <div style={{ padding: '0 16px 12px 16px', fontSize: '1.05rem', lineHeight: '1.5' }}>
                   {post.content}
-                </p>
+                </div>
               )}
 
-              {/* Image */}
+              {/* Full Width Image */}
               {post.image_url && (
-                <div
-                  style={{
-                    margin: '12px 0',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    background: '#0001',
-                  }}
-                >
-                  <img
-                    src={post.image_url}
-                    alt=""
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      display: 'block',
-                      maxHeight: '680px',
-                      objectFit: 'cover',
-                    }}
-                    loading="lazy"
+                <div style={{ width: '100%', background: '#000' }}>
+                  <img 
+                    src={post.image_url} 
+                    alt="" 
+                    style={{ width: '100%', display: 'block', maxHeight: '80vh', objectFit: 'contain' }} 
                   />
                 </div>
               )}
+
+              {/* Full Width Action Bar */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '10px 16px', 
+                borderTop: `1px solid ${theme.border}33`,
+                justifyContent: 'space-around' // Distribute buttons evenly
+              }}>
+                <ActionButton icon={<Heart size={22} />} label="Like" color="#ff4b4b" hoverBg="#ff4b4b15" />
+                <ActionButton icon={<MessageCircle size={22} />} label="Comment" color={theme.primary} hoverBg={`${theme.primary}15`} />
+                <ActionButton icon={<Share2 size={22} />} label="Share" color="#4bbdff" hoverBg="#4bbdff15" />
+              </div>
             </article>
           ))
         )}
       </main>
     </div>
+  );
+}
+
+function ActionButton({ icon, label, color, hoverBg }: any) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        background: hover ? hoverBg : 'none', border: 'none',
+        color: hover ? color : 'inherit', padding: '10px 20px',
+        borderRadius: '8px', cursor: 'pointer', fontSize: '1rem',
+        flex: 1, justifyContent: 'center', transition: '0.2s'
+      }}
+    >
+      {icon}
+      <span style={{ fontWeight: '500' }}>{label}</span>
+    </button>
   );
 }
