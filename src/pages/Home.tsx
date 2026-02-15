@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from './ThemeContext.tsx';
 import { supabase } from '../supabase';
-import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Bell, Search, Zap } from 'lucide-react';
 
+// --- TYPES ---
 type Post = {
   id: string;
   user_id: string;
@@ -20,18 +21,16 @@ export default function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('posts')
-        .select(`
-          id, user_id, content, image_url, created_at,
-          profiles ( display_name )
-        `)
+        .select(`id, user_id, content, image_url, created_at, profiles ( display_name )`)
         .order('created_at', { ascending: false })
         .limit(50);
-
+      
       if (error) {
         console.error('Error fetching posts:', error);
       } else if (data) {
@@ -39,10 +38,10 @@ export default function Dashboard() {
       }
       setLoading(false);
     };
-
     fetchPosts();
   }, []);
 
+  // --- HELPERS ---
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -64,74 +63,148 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: theme.bg, color: theme.text }}>
-      <main style={{ width: '100%', padding: '10px' }}>
+      
+      {/* --- INJECTED ANIMATIONS (gradient now uses theme.primary → theme.secondary) --- */}
+      <style>{`
+        @keyframes gradientFlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-trends {
+          background: linear-gradient(-45deg, ${theme.primary}, ${theme.secondary || '#ff9500'}, #4bbdff, ${theme.primary});
+          background-size: 300%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradientFlow 6s ease infinite;
+          font-weight: 900;
+        }
+        .nav-slide-down {
+          animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes slideDown {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes postFadeIn {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .post-card {
+          animation: postFadeIn 0.5s ease forwards;
+        }
+      `}</style>
+
+      <nav className="navbar fixed-top px-5" style={{ 
+        backgroundColor: `${theme.bg}F2`, 
+        backdropFilter: 'blur(15px)', 
+        borderBottom: `1px solid ${theme.border || '#1e3a5f'}88`, 
+        height: '75px', 
+        zIndex: 1050 
+      }}>
+        <div className="container-fluid d-flex justify-content-between align-items-center">
+          <Link to="/" className="d-flex align-items-center text-decoration-none">
+            <Zap size={28} color={theme.primary} fill={theme.primary} className="me-2" />
+            <h1 className="m-0" style={{ fontSize: '1.8rem', letterSpacing: '-1px' }}>
+              <span style={{ color: theme.text, fontWeight: '800' }}>KIBABII</span>
+              <span className="animate-trends ms-2">TRENDS</span>
+            </h1>
+          </Link>
+
+          <div className="d-flex align-items-center bg-dark rounded-pill px-3 py-2" style={{ width: '400px', border: `1px solid ${theme.border || '#1e3a5f'}` }}>
+            <Search size={18} className="opacity-50 me-2" style={{ color: theme.text }} />
+            <input 
+              type="text" 
+              placeholder="Search Campus Trends..." 
+              className="bg-transparent border-0 w-100" 
+              style={{ outline: 'none', color: theme.text }} 
+            />
+          </div>
+
+          <div className="d-flex gap-4 align-items-center">
+            <Bell size={24} style={{ cursor: 'pointer', color: theme.text }} />
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: theme.primary }}></div>
+          </div>
+        </div>
+      </nav>
+
+      {/* --- MAIN FEED --- */}
+      <main className="container-fluid" style={{ 
+        paddingTop: '90px', 
+        margin: '0 auto',
+        paddingBottom: '40px'
+      }}>
         
         {posts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.7 }}>
-            No posts yet.
+          <div style={{ textAlign: 'center', padding: '80px 20px', opacity: 0.7, color: theme.text }}>
+            No trends yet. Start the vibe, Comrade!
           </div>
         ) : (
-          posts.map((post) => (
+          posts.map((post, index) => (
             <article
               key={post.id}
+              className="post-card shadow-sm"
               style={{
-                backgroundColor: theme.card || '#1e1e1e',
-                borderRadius: '12px',
-                marginBottom: '10px',
-                border: `1px solid ${theme.border || '#333'}`,
-                width: '100%', // Full screen width
+                backgroundColor: theme.cardBg,
+                borderRadius: '20px',
+                marginBottom: '16px',
+                border: `1px solid ${theme.border || '#1e3a5f'}`,
+                overflow: 'hidden',
+                animationDelay: `${index * 0.1}s` 
               }}
             >
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+              {/* Card Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{
-                      width: '45px', height: '45px', borderRadius: '50%',
-                      backgroundColor: theme.primary, color: 'white',
+                      width: '42px', height: '42px', borderRadius: '12px',
+                      backgroundColor: theme.primary, color: '#000',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold', marginRight: '12px',
+                      boxShadow: `0 4px 12px ${theme.primary}66`
                     }}>
                     {(post.profiles?.display_name?.[0] || '?').toUpperCase()}
                   </div>
                   <div>
                     <Link to={`/profileview/${post.user_id}`} style={{ color: theme.text, textDecoration: 'none', fontWeight: 700 }}>
-                      {post.profiles?.display_name || 'User'}
+                      {post.profiles?.display_name || 'Anonymous Comrade'}
                     </Link>
-                    <div style={{ opacity: 0.5, fontSize: '0.8rem' }}>{formatDate(post.created_at)}</div>
+                    <div style={{ opacity: 0.6, fontSize: '0.75rem', color: theme.text }}>
+                      {formatDate(post.created_at)}
+                    </div>
                   </div>
                 </div>
-                <MoreHorizontal size={20} style={{ opacity: 0.6 }} />
+                <MoreHorizontal size={20} style={{ opacity: 0.6, cursor: 'pointer', color: theme.text }} />
               </div>
 
-              {/* Content text */}
+              {/* Text Content */}
               {post.content && (
-                <div style={{ padding: '0 16px 12px 16px', fontSize: '1.05rem', lineHeight: '1.5' }}>
+                <div style={{ padding: '0px 18px 15px 18px', fontSize: '1.05rem', lineHeight: '1.5', color: theme.text }}>
                   {post.content}
                 </div>
               )}
 
-              {/* Full Width Image */}
+              {/* Media Content */}
               {post.image_url && (
-                <div style={{ width: '100%', background: '#000' }}>
+                <div style={{ width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
                   <img 
                     src={post.image_url} 
-                    alt="" 
-                    style={{ width: '100%', display: 'block', maxHeight: '80vh', objectFit: 'contain' }} 
+                    alt="Trend" 
+                    style={{ width: '100%', maxHeight: '500px', objectFit: 'cover', display: 'block' }} 
                   />
                 </div>
               )}
 
-              {/* Full Width Action Bar */}
+              {/* Action Bar */}
               <div style={{ 
                 display: 'flex', 
-                alignItems: 'center', 
-                padding: '10px 16px', 
-                borderTop: `1px solid ${theme.border}33`,
-                justifyContent: 'space-around' // Distribute buttons evenly
+                padding: '8px 12px', 
+                borderTop: `1px solid ${theme.border || '#1e3a5f'}44`,
+                justifyContent: 'space-around'
               }}>
-                <ActionButton icon={<Heart size={22} />} label="Like" color="#ff4b4b" hoverBg="#ff4b4b15" />
-                <ActionButton icon={<MessageCircle size={22} />} label="Comment" color={theme.primary} hoverBg={`${theme.primary}15`} />
-                <ActionButton icon={<Share2 size={22} />} label="Share" color="#4bbdff" hoverBg="#4bbdff15" />
+                <ActionButton icon={<Heart size={20} />} label="Liking" color="#ff4b4b" hoverBg="#ff4b4b22" />
+                <ActionButton icon={<MessageCircle size={20} />} label="Talk" color={theme.primary} hoverBg={`${theme.primary}22`} />
+                <ActionButton icon={<Share2 size={20} />} label="Plug" color={theme.secondary || '#ff9500'} hoverBg={`${theme.secondary || '#ff9500'}22`} />
               </div>
             </article>
           ))
@@ -141,22 +214,28 @@ export default function Dashboard() {
   );
 }
 
+// --- REUSABLE ACTION BUTTON ---
 function ActionButton({ icon, label, color, hoverBg }: any) {
   const [hover, setHover] = useState(false);
+  const [active, setActive] = useState(false);
+
   return (
     <button
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={() => setActive(!active)}
       style={{
         display: 'flex', alignItems: 'center', gap: '8px',
         background: hover ? hoverBg : 'none', border: 'none',
-        color: hover ? color : 'inherit', padding: '10px 20px',
-        borderRadius: '8px', cursor: 'pointer', fontSize: '1rem',
-        flex: 1, justifyContent: 'center', transition: '0.2s'
+        color: active ? color : (hover ? color : 'inherit'), 
+        padding: '10px 15px',
+        borderRadius: '12px', cursor: 'pointer', fontSize: '0.9rem',
+        flex: 1, justifyContent: 'center', transition: 'all 0.2s ease',
+        transform: active ? 'scale(1.1)' : 'scale(1)'
       }}
     >
       {icon}
-      <span style={{ fontWeight: '500' }}>{label}</span>
+      <span style={{ fontWeight: '600' }}>{label}</span>
     </button>
   );
 }
