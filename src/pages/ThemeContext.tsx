@@ -11,7 +11,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     setAccentHue(Math.floor(Math.random() * 360));
   };
 
-  // ← This is the key change
   const theme = useMemo(
     () => ({
       primary: `hsl(${accentHue}, 80%, 60%)`,

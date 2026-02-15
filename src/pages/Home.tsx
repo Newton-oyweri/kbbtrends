@@ -13,32 +13,60 @@ type Post = {
   created_at: string;
   profiles: {
     display_name: string | null;
+    avatar_url: string | null;  // ← added
   } | null;
+};
+
+type CurrentUserProfile = {
+  avatar_url: string | null;
+  display_name: string | null;
 };
 
 export default function Dashboard() {
   const { theme } = useTheme();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentUser, setCurrentUser] = useState<CurrentUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   // --- DATA FETCHING ---
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+
+      // 1. Fetch current user's profile for navbar avatar
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+        if (userProfile) {
+          setCurrentUser(userProfile);
+        }
+      }
+
+      // 2. Fetch posts with profiles (now including avatar_url)
+      const { data: postsData, error } = await supabase
         .from('posts')
-        .select(`id, user_id, content, image_url, created_at, profiles ( display_name )`)
+        .select(`
+          id, user_id, content, image_url, created_at,
+          profiles!inner ( display_name, avatar_url )  // ← inner join + avatar_url
+        `)
         .order('created_at', { ascending: false })
         .limit(50);
-      
+
       if (error) {
         console.error('Error fetching posts:', error);
-      } else if (data) {
-        setPosts(data);
+      } else if (postsData) {
+        setPosts(postsData as Post[]);
       }
+
       setLoading(false);
     };
-    fetchPosts();
+
+    fetchData();
   }, []);
 
   // --- HELPERS ---
@@ -64,7 +92,7 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: theme.bg, color: theme.text }}>
       
-      {/* --- INJECTED ANIMATIONS (gradient now uses theme.primary → theme.secondary) --- */}
+      {/* --- INJECTED ANIMATIONS --- */}
       <style>{`
         @keyframes gradientFlow {
           0% { background-position: 0% 50%; }
@@ -123,7 +151,38 @@ export default function Dashboard() {
 
           <div className="d-flex gap-4 align-items-center">
             <Bell size={24} style={{ cursor: 'pointer', color: theme.text }} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: theme.primary }}></div>
+            <Link to="/profile">
+              {currentUser?.avatar_url ? (
+                <img
+                  src={currentUser.avatar_url}
+                  alt="Your profile"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: `2px solid ${theme.primary}80`,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: theme.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    fontSize: '1.1rem',
+                  }}
+                >
+                  {(currentUser?.display_name?.[0] || '?').toUpperCase()}
+                </div>
+              )}
+            </Link>
           </div>
         </div>
       </nav>
@@ -157,13 +216,37 @@ export default function Dashboard() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{
-                      width: '42px', height: '42px', borderRadius: '12px',
-                      backgroundColor: theme.primary, color: '#000',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 'bold', marginRight: '12px',
-                      boxShadow: `0 4px 12px ${theme.primary}66`
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      marginRight: '12px',
+                      boxShadow: `0 4px 12px ${theme.primary}33`,
                     }}>
-                    {(post.profiles?.display_name?.[0] || '?').toUpperCase()}
+                    {post.profiles?.avatar_url ? (
+                      <img
+                        src={post.profiles.avatar_url}
+                        alt={post.profiles.display_name || 'User'}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: theme.primary,
+                        color: '#000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                      }}>
+                        {(post.profiles?.display_name?.[0] || '?').toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <Link to={`/profileview/${post.user_id}`} style={{ color: theme.text, textDecoration: 'none', fontWeight: 700 }}>

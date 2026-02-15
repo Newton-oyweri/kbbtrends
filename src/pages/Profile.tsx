@@ -7,26 +7,39 @@ export default function Profile() {
   const { theme } = useTheme();
 
   const [displayName, setDisplayName] = useState("");
-  const [postContent, setPostContent] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // optional nice-to-have
-  const [loading, setLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
+  const [postContent, setPostContent] = useState("");
+  const [postFile, setPostFile] = useState<File | null>(null);
+  const [postPreview, setPostPreview] = useState<string | null>(null);
+  const [postLoading, setPostLoading] = useState(false);
+
+  // Fetch profile data (name + avatar)
   useEffect(() => {
-    const getProfile = async () => {
+    const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", user.id)
-          .single();
-        if (data) setDisplayName(data.display_name || "");
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Profile fetch error:", error);
+      } else if (data) {
+        setDisplayName(data.display_name || "");
+        setAvatarUrl(data.avatar_url || null);
       }
     };
-    getProfile();
+    fetchProfile();
   }, []);
 
+  // Handle profile name update
   const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
     const { data: { user } } = await supabase.auth.getUser();
@@ -37,104 +50,233 @@ export default function Profile() {
       .update({ display_name: displayName })
       .eq("id", user.id);
 
-    alert(error ? "Update failed" : "Profile updated!");
+    alert(error ? "Update failed: " + error.message : "Profile updated!");
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection + preview
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  // Upload avatar + update profile
+  const handleUploadAvatar = async () => {
+    if (!avatarFile) return;
+    setAvatarLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in");
+      setAvatarLoading(false);
+      return;
+    }
+
+    const fileExt = avatarFile.name.split(".").pop() || "jpg";
+    const fileName = `avatar.${fileExt}`; // fixed name → overwrites old one
+    const filePath = `${user.id}/${fileName}`;
+
+    // Upload (upsert: true → replaces if exists)
+    const { error: uploadError } = await supabase.storage
+      .from("avatars") // ← create this bucket in Supabase dashboard if not exists
+      .upload(filePath, avatarFile, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      alert("Avatar upload failed: " + uploadError.message);
+      setAvatarLoading(false);
+      return;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+    if (!publicUrl) {
+      alert("Could not get avatar URL");
+      setAvatarLoading(false);
+      return;
+    }
+
+    // Save URL to profiles table
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id);
+
+    if (updateError) {
+      alert("Failed to save avatar URL: " + updateError.message);
+    } else {
+      setAvatarUrl(publicUrl);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      alert("Profile picture updated!");
+    }
+
+    setAvatarLoading(false);
+  };
+
+  // Existing post creation (kept mostly unchanged, renamed vars for clarity)
+  const handlePostFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Optional: validate it's an image
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file");
       return;
     }
 
-    setSelectedFile(file);
-
-    // Optional: show preview
+    setPostFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => setPreviewUrl(reader.result as string);
+    reader.onloadend = () => setPostPreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleCreatePost = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setPostLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       alert("You must be logged in");
-      setLoading(false);
+      setPostLoading(false);
       return;
     }
 
     let imageUrl: string | null = null;
 
-    // 1. Upload image if selected
-    if (selectedFile) {
-      const fileExt = selectedFile.name.split(".").pop() || "jpg";
+    if (postFile) {
+      const fileExt = postFile.name.split(".").pop() || "jpg";
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `posts/${user.id}/${fileName}`; // organized path
+      const filePath = `posts/${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("post-images")
-        .upload(filePath, selectedFile, {
-          cacheControl: "3600", // 1 hour cache
-          upsert: false,        // don't overwrite if exists (rare)
+        .upload(filePath, postFile, {
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
-        alert("Failed to upload image: " + uploadError.message);
-        setLoading(false);
+        alert("Image upload failed: " + uploadError.message);
+        setPostLoading(false);
         return;
       }
 
-      // 2. Get public URL (since bucket is public)
       const { data: urlData } = supabase.storage
         .from("post-images")
         .getPublicUrl(filePath);
 
       imageUrl = urlData.publicUrl;
-
-      if (!imageUrl) {
-        alert("Could not get public URL");
-        setLoading(false);
-        return;
-      }
     }
 
-    // 3. Create the post (with or without image)
     const { error: insertError } = await supabase
       .from("posts")
       .insert([
         {
-          content: postContent.trim() || null, // allow text-only or image-only posts
+          content: postContent.trim() || null,
           user_id: user.id,
           image_url: imageUrl,
         },
       ]);
 
     if (insertError) {
-      console.error("Post insert error:", insertError);
       alert("Failed to create post: " + insertError.message);
     } else {
       setPostContent("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
+      setPostFile(null);
+      setPostPreview(null);
       alert("Posted successfully!");
     }
 
-    setLoading(false);
+    setPostLoading(false);
   };
 
   return (
-    <div style={{ display: "flex", backgroundColor: theme.bg, color: theme.text, minHeight: "100vh" }}>
+    <div
+      style={{
+        display: "flex",
+        backgroundColor: theme.bg,
+        color: theme.text,
+        minHeight: "100vh",
+      }}
+    >
       <Navbar />
 
-      <main style={{ flex: 1, padding: "20px" }}>
-        {/* Profile Edit Section */}
+      <main style={{ flex: 1, padding: "20px", overflowY: "auto" }}>
+        {/* Profile Picture Upload */}
+        <section style={{ marginBottom: "40px", textAlign: "center" }}>
+          <h3>Profile Picture</h3>
+
+          {avatarUrl || avatarPreview ? (
+            <img
+              src={avatarPreview || avatarUrl || ""}
+              alt="Profile"
+              style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: `3px solid ${theme.primary || "#00d4ff"}`,
+                marginBottom: "16px",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                backgroundColor: "#333",
+                margin: "0 auto 16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "2rem",
+              }}
+            >
+              ?
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            style={{ display: "block", margin: "0 auto 12px" }}
+          />
+
+          <button
+            onClick={handleUploadAvatar}
+            disabled={avatarLoading || !avatarFile}
+            style={{
+              backgroundColor: theme.primary || "#00d4ff",
+              color: "white",
+              border: "none",
+              padding: "8px 20px",
+              borderRadius: "6px",
+              cursor: avatarFile ? "pointer" : "not-allowed",
+              opacity: avatarFile ? 1 : 0.6,
+            }}
+          >
+            {avatarLoading ? "Uploading..." : "Upload Profile Picture"}
+          </button>
+        </section>
+
+        <hr style={{ margin: "40px 0" }} />
+
+        {/* Edit Display Name */}
         <section style={{ marginBottom: "40px" }}>
           <h3>Edit Profile</h3>
           <form onSubmit={handleUpdateProfile}>
@@ -145,13 +287,15 @@ export default function Profile() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Display Name"
             />
-            <button type="submit" className="btn btn-secondary">Save Name</button>
+            <button type="submit" className="btn btn-secondary">
+              Save Name
+            </button>
           </form>
         </section>
 
-        <hr />
+        <hr style={{ margin: "40px 0" }} />
 
-        {/* Post Creation Section */}
+        {/* Create Post */}
         <section>
           <h3>Create New Post</h3>
           <form onSubmit={handleCreatePost}>
@@ -163,7 +307,6 @@ export default function Profile() {
               rows={3}
             />
 
-            {/* Image upload input */}
             <div className="mb-3">
               <label htmlFor="postImage" className="form-label">
                 Add an image (optional)
@@ -173,17 +316,16 @@ export default function Profile() {
                 className="form-control"
                 id="postImage"
                 accept="image/*"
-                onChange={handleFileChange}
+                onChange={handlePostFileChange}
               />
             </div>
 
-            {/* Optional live preview */}
-            {previewUrl && (
-              <div className="mb-3">
+            {postPreview && (
+              <div className="mb-3 text-center">
                 <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{ maxWidth: "280px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}
+                  src={postPreview}
+                  alt="Post Preview"
+                  style={{ maxWidth: "280px", borderRadius: "8px" }}
                 />
               </div>
             )}
@@ -191,9 +333,9 @@ export default function Profile() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={loading || (!postContent.trim() && !selectedFile)}
+              disabled={postLoading || (!postContent.trim() && !postFile)}
             >
-              {loading ? "Posting..." : "Post"}
+              {postLoading ? "Posting..." : "Post"}
             </button>
           </form>
         </section>
