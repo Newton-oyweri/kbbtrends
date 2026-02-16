@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { useTheme } from '../pages/ThemeContext.tsx';
-import { FaBars, FaMagic, FaSignOutAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { supabase } from "../supabase";
 
 export default function Navbar() {
-  const [isExpanded, setIsExpanded] = useState(false);
   const { theme, generateRandomTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -13,84 +10,53 @@ export default function Navbar() {
   };
 
   const navLinks = [
-{ path: '/home', label: 'Vybz Stream', icon: <i className="bi bi-people-fill"></i> },
-
-{ path: '/profile', label: 'My Space', icon: <i className="bi bi-person-circle"></i> },
-
-{ path: '/chats', label: 'Messages', icon: <i className="bi bi-chat-dots-fill"></i> },
-
- 
+    { path: '/home', label: 'Vybz Stream', icon: 'bi-people-fill' },
+    { path: '/profile', label: 'My Space', icon: 'bi-person-circle' },
+    { path: '/chats', label: 'Messages', icon: 'bi-chat-dots-fill' },
   ];
 
   return (
-    <aside
+    <header
       style={{
         backgroundColor: theme.cardBg,
-        border: `2px solid ${theme.primary}40`,
-        boxShadow: `0 0 40px ${theme.glow}30`,
+        borderBottom: `2px solid ${theme.primary}40`,
+        boxShadow: `0 4px 40px ${theme.glow}30`,
         transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-        // Force the height and prevent any jumping
-        height: 'calc(100vh - 20px)', 
-        maxHeight: 'calc(100vh - 20px)',
       }}
-      className={`m-[10px] flex flex-col rounded-[24px] overflow-hidden sticky top-[10px] shrink-0 ${
-        isExpanded ? 'w-64' : 'w-20'
-      }`}
+      className="sticky top-0 z-50 w-full px-6 h-20 flex items-center justify-between backdrop-blur-md"
     >
-      {/* HEADER / TOGGLE */}
-      <div 
-        className="h-20 flex items-center px-6 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <FaBars style={{ color: theme.primary }} className="text-xl flex-shrink-0" />
+      {/* LOGO SECTION */}
+      <div className="flex items-center gap-4">
         <span
-          className={`ml-4 font-black text-xl uppercase tracking-tighter transition-all duration-500 whitespace-nowrap ${
-            isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-          }`}
+          className="font-black text-2xl uppercase tracking-tighter"
           style={{ color: theme.text }}
         >
           Kbb trends
         </span>
       </div>
 
-      {/* NAV LINKS - overflow-y-auto ensures if you add 20 links, they scroll INSIDE the nav, not push it down */}
-      <nav className="flex-1 px-3 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      {/* HORIZONTAL NAV LINKS */}
+      <nav className="hidden md:flex items-center gap-6">
         {navLinks.map((link, index) => (
           <Link
             key={index}
             to={link.path}
-            className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group ${
-              isExpanded ? 'justify-start' : 'justify-center'
-            }`}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 group hover:scale-105"
             style={{ color: theme.text, textDecoration: 'none' }}
           >
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110 flex-shrink-0"
-              style={{ backgroundColor: `${theme.primary}15`, color: theme.primary }}
-            >
-              {link.icon}
-            </div>
-            {isExpanded && (
-              <span className="font-bold text-sm transition-opacity duration-300">
-                {link.label}
-              </span>
-            )}
+            <i 
+              className={`${link.icon} text-xl`} 
+              style={{ color: theme.primary }}
+            ></i>
+            <span className="font-bold text-sm hidden lg:block">
+              {link.label}
+            </span>
           </Link>
         ))}
       </nav>
 
-      {/* FOOTER ACTIONS */}
-      <div className="p-3 space-y-2 border-t flex-shrink-0" style={{ borderColor: `${theme.primary}20` }}>
-        {/* LOGOUT */}
-        <button
-          onClick={handleLogout}
-          style={{ color: theme.text, border: `1px solid ${theme.primary}20` }}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl hover:bg-red-500/10 transition-colors"
-        >
-          <FaSignOutAlt style={{ color: theme.primary }} className="flex-shrink-0" />
-          {isExpanded && <span className="text-[10px] font-black uppercase tracking-widest">Logout</span>}
-        </button>
-
+      {/* ACTION BUTTONS */}
+      <div className="flex items-center gap-3">
         {/* CHAOS MODE */}
         <button
           onClick={generateRandomTheme}
@@ -99,12 +65,22 @@ export default function Navbar() {
             boxShadow: `0 0 15px ${theme.glow}`,
             color: '#fff'
           }}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl transition-transform active:scale-95 font-bold"
+          className="flex items-center justify-center p-3 rounded-xl transition-transform active:scale-95 group"
+          title="Chaos Mode"
         >
-          <FaMagic className="flex-shrink-0" />
-          {isExpanded && <span className="text-[10px] font-black uppercase tracking-widest">Chaos Mode</span>}
+          <i className="bi bi-magic"></i>
+        </button>
+
+        {/* LOGOUT */}
+        <button
+          onClick={handleLogout}
+          style={{ color: theme.text, border: `1px solid ${theme.primary}20` }}
+          className="flex items-center justify-center p-3 rounded-xl hover:bg-red-500/10 transition-colors group"
+          title="Logout"
+        >
+          <i className="bi bi-box-arrow-right" style={{ color: theme.primary }}></i>
         </button>
       </div>
-    </aside>
+    </header>
   );
 }
